@@ -1,0 +1,1452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Proof-of-Control — A Practitioner's Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============================================================ COVER -->
+<section class="page page--cover">
+  <div>
+    <div class="pill pill--lime">Advanced AI Society · Practitioner Guide</div>
+  </div>
+  <div>
+    <h1 class="cover-title">Proof&#8209;of&#8209;Control<br><span class="hl">for AI Agents</span></h1>
+    <p class="cover-sub">How to prove what your agents did — rather than promise it — and how to
+    tell the difference when a vendor says they already do.</p>
+  </div>
+  <div class="cover-meta">
+    <div>
+      <div class="cover-org">Advanced AI Society<span class="dot">.</span></div>
+      <div class="cover-orgsub">advancedaisociety.org</div>
+    </div>
+    <div class="cover-edition">
+      For CISOs and security practitioners<br>
+      Standard v0.1 · First edition, 2026
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ TOC -->
+<section class="page">
+  <h1>Contents</h1>
+  <div class="two-up">
+    <div>
+      <div class="toc-row"><span class="toc-num">01</span><span class="toc-label">You cannot check what your agents did</span><span class="toc-dots"></span><span class="toc-pg">3</span></div>
+      <div class="toc-row"><span class="toc-num">02</span><span class="toc-label">The principles behind Proof-of-Control</span><span class="toc-dots"></span><span class="toc-pg">4</span></div>
+      <div class="toc-row"><span class="toc-num">Part I</span><span class="toc-label">What your evidence is worth today</span><span class="toc-dots"></span><span class="toc-pg">5</span></div>
+      <div class="toc-row"><span class="toc-num"></span><span class="toc-desc">The Verifiability Gap · Why logs are not evidence · The four properties</span><span class="toc-dots"></span><span class="toc-pg"></span></div>
+      <div class="toc-row"><span class="toc-num">Part II</span><span class="toc-label">The four tiers and the line that matters</span><span class="toc-dots"></span><span class="toc-pg">9</span></div>
+      <div class="toc-row"><span class="toc-num"></span><span class="toc-desc">The ladder · The binary threshold · What Tier 3 does not mean</span><span class="toc-dots"></span><span class="toc-pg"></span></div>
+      <div class="toc-row"><span class="toc-num">Part III</span><span class="toc-label">The six domains: what to evidence</span><span class="toc-dots"></span><span class="toc-pg">14</span></div>
+      <div class="toc-row"><span class="toc-num"></span><span class="toc-desc">Provenance · Privacy · Portability · Authorization · Identity · Security</span><span class="toc-dots"></span><span class="toc-pg"></span></div>
+    </div>
+    <div>
+      <div class="toc-row"><span class="toc-num">Part IV</span><span class="toc-label">What it takes to run</span><span class="toc-dots"></span><span class="toc-pg">18</span></div>
+      <div class="toc-row"><span class="toc-num"></span><span class="toc-desc">Reference architecture · Where to intercept · What it costs · How it fails</span><span class="toc-dots"></span><span class="toc-pg"></span></div>
+      <div class="toc-row"><span class="toc-num">Part V</span><span class="toc-label">Buying, auditing, and claiming</span><span class="toc-dots"></span><span class="toc-pg">24</span></div>
+      <div class="toc-row"><span class="toc-num"></span><span class="toc-desc">Questions for vendors · Reading a claim · Running an audit · Where regulation lands</span><span class="toc-dots"></span><span class="toc-pg"></span></div>
+      <div class="toc-row"><span class="toc-num">03</span><span class="toc-label">From principles to practice</span><span class="toc-dots"></span><span class="toc-pg">30</span></div>
+      <div class="toc-row"><span class="toc-num">04</span><span class="toc-label">What this does not do</span><span class="toc-dots"></span><span class="toc-pg">31</span></div>
+      <div class="toc-row"><span class="toc-num">05</span><span class="toc-label">Where to go next</span><span class="toc-dots"></span><span class="toc-pg">32</span></div>
+
+      <div class="box" style="margin-top:26px">
+        <div class="box-title">Who this is for</div>
+        <p>Parts I and II give security leaders the framing and the vocabulary to evaluate a
+        claim. Parts III and IV are for the architects and engineers who have to build or buy
+        it. Part V is procurement, audit, and regulatory position — read it before you sign
+        anything.</p>
+      </div>
+    </div>
+  </div>
+  <div class="folio">2</div>
+</section>
+
+<!-- ============================================================ OPENER -->
+<section class="page">
+  <h1>You cannot check what your agents did</h1>
+  <div class="cols">
+    <p class="lead">Suppose you let a piece of software act on your behalf: read your records,
+    call your tools, move your money. Afterward it tells you what it did. How would you check?</p>
+
+    <p>In nearly every deployment running today, you cannot. The only account of what happened
+    is the system's own, and the party writing that account is the party you would be checking.
+    Your agent's logs are produced by your agent's infrastructure, retained by your agent's
+    operator, and presented to you on request. If that operator is a vendor, you are trusting
+    their word. If it is your own platform team, your auditor is trusting yours.</p>
+
+    <p>This is not a hypothetical weakness. It is the ordinary condition of every agentic
+    deployment, and it becomes acute for exactly the reason agents are attractive: they act
+    faster and more often than anyone can review. An agent that takes four hundred actions an
+    hour produces four hundred assertions an hour, and the number of people available to check
+    them has not changed.</p>
+
+    <p>We call this the <strong>Verifiability Gap</strong>: the distance between what a system
+    asserts about its own behaviour and what an independent party can establish. The gap has
+    always existed in software. Agents widen it faster than governance can close it.</p>
+
+    <h2>Why this gets worse, not better</h2>
+
+    <p>Three things compound. Agents act <em>autonomously</em>, so no human is in the loop to
+    corroborate. They act <em>at machine speed</em>, so sampling catches a vanishing fraction.
+    And they act <em>through legitimate credentials</em>, so the resulting activity looks
+    exactly like authorized activity — because it is. An agent misused through prompt injection
+    does not break in. It signs in.</p>
+
+    <p>The security consequence is specific: your existing controls will report that everything
+    was permitted, and they will be correct, and you will still not know what happened.</p>
+
+    <h2>What this guide is</h2>
+
+    <p>Proof-of-Control is an open standard that closes the gap by changing who produces the
+    evidence. Instead of the operator writing an account of what the agent did, the enforcing
+    mechanism produces cryptographic evidence at the moment of action — evidence a third party
+    can check without trusting the operator at all.</p>
+
+    <p>This guide covers what that means in practice:</p>
+
+    <ol>
+      <li>What your current evidence is actually worth, and the four properties that separate
+      evidence from logging</li>
+      <li>The four verifiability tiers, and the one line on the ladder that changes who you have
+      to trust</li>
+      <li>What to evidence across six domains, and what to ask for in each</li>
+      <li>What it costs to run — measured, on real hardware, including the parts that surprised us</li>
+      <li>How to buy it, audit it, and read a conformance claim without being misled by a good one</li>
+    </ol>
+
+    <div class="box">
+      <div class="box-title">A note on honesty</div>
+      <p>This guide states what the standard does <em>not</em> establish as clearly as what it
+      does — including a place where our own tier definitions overclaim, and which we have not
+      yet fixed. A security framework that only tells you its strengths is a marketing document.
+      Page 31 is the list of things this will not do for you.</p>
+    </div>
+  </div>
+  <div class="folio">3</div>
+</section>
+
+<!-- ============================================================ PRINCIPLES -->
+<section class="page">
+  <h1>The principles behind Proof-of-Control</h1>
+  <div class="cols">
+    <p>Zero Trust replaced perimeter security with a premise: trust nothing, verify everything,
+    assume breach. Proof-of-Control extends that premise one step, to the part Zero Trust leaves
+    open — <strong>verify with what?</strong></p>
+
+    <p>A zero-trust architecture authenticates and authorizes every request. It does not, by
+    itself, produce an artifact that survives the authorization decision and can be checked by
+    someone who was not there. When the incident review happens six months later, the policy
+    engine's decision is gone and what remains is a log entry the operator wrote.</p>
+
+    <p>Four principles follow.</p>
+
+    <h2>Evidence is produced by the mechanism, not the operator</h2>
+    <p>The thing that enforces the control also produces the record, cryptographically, at the
+    moment it enforces. Nobody can write the record without enforcing, and nobody can enforce
+    without writing the record. This is the whole idea; everything else is engineering.</p>
+
+    <h2>No side effect without evidence</h2>
+    <p>Evidence emission is a precondition of action release, not a consequence of it. If the
+    evidence pipeline is down, actions do not proceed. A system that keeps acting while its
+    logging is broken has told you exactly how much it values the logging.</p>
+
+    <h2>Grade evidence by who you must trust</h2>
+    <p>Not all evidence is equal, and the useful axis is not volume or retention — it is
+    <em>whose honesty the evidence depends on</em>. A tier ladder built on that axis lets a
+    buyer ask one question instead of forty.</p>
+
+    <h2>Verify execution, not quality</h2>
+    <p>This standard establishes deterministic facts: which model ran, on whose authority, with
+    what input, producing what effect. It does not establish that the output was correct, fair,
+    or wise. Those are human judgments and they stay human judgments. A framework that blurs
+    that line will eventually be used to launder one as the other.</p>
+
+    <div class="box box--ink">
+      <div class="box-title">A design test</div>
+      <p>When you evaluate any control here, ask: <em>could the operator produce this evidence
+      without having done the thing it describes?</em></p>
+      <p>If yes, it is a log. If no, it is evidence. Most of what is sold as agent
+      observability today fails this test, and fails it by design rather than by oversight —
+      producing checkable evidence is harder and nobody was asking for it.</p>
+    </div>
+
+    <div class="quote">
+      <p>&ldquo;The cost of doing falls toward zero. The cost of verifying stays pinned to human
+      attention. So verification becomes the scarce thing.&rdquo;</p>
+      <p class="attrib">The premise this standard is built on. If checking must be done by
+      machines, the evidence has to be the kind a machine can check.</p>
+    </div>
+  </div>
+  <div class="folio">4</div>
+</section>
+
+<!-- ============================================================ PART I -->
+<section class="page page--divider tone-a">
+  <svg class="divider-art" viewBox="0 0 300 300" fill="none">
+    <rect x="60" y="60" width="180" height="180" rx="10" fill="#f8f6f3" stroke="#0a0a0a" stroke-width="7"/>
+    <path d="M95 150h110M95 178h78M95 122h60" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="215" cy="215" r="52" fill="#cfff04" stroke="#0a0a0a" stroke-width="7"/>
+    <path d="M196 215l13 14 26-29" stroke="#0a0a0a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M40 88c-14 22-14 46 0 68" stroke="#0a0a0a" stroke-width="6" stroke-linecap="round"/>
+  </svg>
+  <div>
+    <div class="pill">Part I</div>
+    <div class="divider-title">What your evidence<br>is worth today</div>
+    <p class="divider-blurb">Most organizations have logging and believe they have evidence.
+    The difference is not volume — it is whether anyone but the operator can check it.</p>
+  </div>
+  <div class="folio">5</div>
+</section>
+
+<section class="page">
+  <div class="page-tag">Part I · What your evidence is worth today</div>
+  <h1>Why logs are not evidence</h1>
+  <div class="cols">
+    <p>Application logs, SIEM feeds, and audit trails are useful operational tools. As evidence
+    about a disputed action they share a defect: <strong>the party who would be blamed controls
+    the record.</strong></p>
+
+    <p>That is not an accusation of bad faith. It is a structural observation, and it holds even
+    when everyone is honest, because the point of evidence is that it works when someone is not.
+    An auditor who accepts your logs is not verifying your behaviour; they are verifying that
+    your logs are internally consistent with your account of your behaviour.</p>
+
+    <h2>Four ways an operator-controlled log fails</h2>
+    <p>Each of these is a real attack we ran against a working implementation, not a
+    hypothetical.</p>
+
+    <table>
+      <tr><th style="width:31%">Failure</th><th>What it looks like</th></tr>
+      <tr><td><strong>Alteration</strong></td><td>A record is edited after the fact. Unsigned logs leave no trace of it.</td></tr>
+      <tr><td><strong>Omission</strong></td><td>An inconvenient step is dropped. Without sequence numbering, a missing step is indistinguishable from a step that never happened.</td></tr>
+      <tr><td><strong>Truncation</strong></td><td>Recent history is withheld. The shortened log is internally perfect.</td></tr>
+      <tr><td><strong>Equivocation</strong></td><td>Two different histories are shown to two different parties. Each is internally consistent and neither party can tell.</td></tr>
+    </table>
+
+    <p>The last one deserves emphasis, because it is the failure most people have never
+    considered. An operator can present one history to a regulator and a different one to a
+    customer. Both check out. Detecting it requires the two verifiers to compare notes — which
+    means non-equivocation is not a property of your log at all. It is a property of your
+    <em>ecosystem</em>.</p>
+
+    <h2>What separates evidence from logging</h2>
+
+    <p>Four properties. A record that lacks any one of them is a log.</p>
+
+    <h3>Binary</h3>
+    <p>The evidence either verifies or it does not. No judgment call, no confidence score, no
+    "appears consistent with." A check that returns a probability has moved the decision back to
+    a human, which is the cost we were trying to avoid.</p>
+
+    <h3>Contemporaneous</h3>
+    <p>Created at the moment of action, inside the transaction that performed it — not
+    reconstructed later from mutable sources. A system that plans to rebuild authority from logs
+    months afterward usually cannot.</p>
+
+    <h3>Tamper-evident</h3>
+    <p>Produced by the cryptographic mechanism, not the operator. Modifying, inserting, or
+    reordering any record breaks a chain that anyone can check.</p>
+
+    <h3>Transparent</h3>
+    <p>Everything that must still be trusted is written down. Not "this is secure" but "this is
+    secure provided these five parties behave, and here they are." Page 12 is what that list
+    actually looks like.</p>
+
+    <div class="box box--red">
+      <div class="box-title">The question that separates them</div>
+      <p>Ask your platform team, or your vendor: <em>if you wanted to remove one action from
+      the record, what would stop you?</em></p>
+      <p>If the answer is a policy, a control, or an access restriction, you have logging. If the
+      answer is that the arithmetic would visibly break for anyone checking, you have evidence.</p>
+    </div>
+  </div>
+  <div class="folio">6</div>
+</section>
+
+<section class="page">
+  <div class="page-tag">Part I · What your evidence is worth today</div>
+  <h1>Where evidence has to come from</h1>
+  <div class="cols">
+    <p>If evidence must be produced by the mechanism that enforces, then the architecture
+    question is: <em>where is the mechanism?</em></p>
+
+    <p>The answer that does not work is inside the agent. An agent that reports on itself has
+    the same defect as an operator that reports on itself, one level down. Anything the agent
+    controls, an attacker who controls the agent also controls.</p>
+
+    <p>The answer that does work is an interception point <strong>outside</strong> the agent,
+    which every consequential action must pass through, and which the agent has no path
+    around.</p>
+
+    <figure class="figure">
+      <img src="figures/evidence-flow-light.svg" alt="Evidence flow through the interception gateway">
+      <figcaption>The gateway sits out-of-band between the agent and its tools. Evidence is
+      written before the action is released, and what a verifier checks is that evidence — not
+      the operator's account of it.</figcaption>
+    </figure>
+
+    <h2>Three architectural commitments</h2>
+
+    <h3>The gateway is a separate process</h3>
+    <p>Not a library the agent calls. Not a middleware the agent could skip. A separate service,
+    with the agent holding no network path or credential that reaches its tools directly. If the
+    agent can call the tool without going through the gateway, everything downstream is
+    decoration.</p>
+
+    <h3>Evidence is written before release</h3>
+    <p>The gateway does not forward the action until the record is durably written. This is
+    what makes "no side effect without evidence" true rather than aspirational, and it is the
+    requirement that will generate the most pushback from your platform team, because it puts a
+    write on the critical path.</p>
+
+    <h3>The effect channel is mediated</h3>
+    <p>This is the one people miss, and it is the subject of the most important thing we
+    learned building this. Attesting <em>"I evaluated this action and permitted it"</em> says
+    nothing whatsoever about what the machine then went on to do. A compromised host can obtain
+    a perfectly valid attestation for a benign action and dispatch a malicious one.</p>
+
+    <p>Closing that requires one of three things: the credentials for the effect live inside the
+    attested environment; or a single-use capability, cryptographically bound to the evaluated
+    action, that the far end checks before executing; or egress confined to an attested
+    enforcement point that admits only requests carrying matching evidence.</p>
+
+    <div class="box">
+      <div class="box-title">Why this matters for a buyer</div>
+      <p>A vendor who attests policy decisions but does not mediate the effect channel is
+      entitled to claim their <em>evaluation</em> is verifiable. They are not entitled to claim
+      their <em>actions</em> are. The standard makes this explicit: without effect mediation, a
+      deployment may claim Tier 1 or 2 only.</p>
+      <p>This is the single most common overclaim in the category, and it is easy to test —
+      ask which of the three options they implement.</p>
+    </div>
+  </div>
+  <div class="folio">7</div>
+</section>
+
+<section class="page">
+  <div class="page-tag">Part I · What your evidence is worth today</div>
+  <h1>What has to be in the record</h1>
+  <div class="cols">
+    <p>An evidence record is an Entity Attestation Token — an IETF standard format — carrying a
+    defined claim set. The fields matter, so here is what each is for and what its absence
+    costs you.</p>
+
+    <table>
+      <tr><th style="width:34%">Claim</th><th>Why a verifier needs it</th></tr>
+      <tr><td><code>agent_id</code></td><td>Which agent instance acted</td></tr>
+      <tr><td><code>initiating_user</code></td><td>On whose authority — the human-to-agent binding</td></tr>
+      <tr><td><code>agbom_digest</code></td><td>What the agent was composed of: model, tools, prompt</td></tr>
+      <tr><td><code>interception_point</code></td><td>Which lifecycle hook produced this record</td></tr>
+      <tr><td><code>step_index</code></td><td>Position in the path; a gap exposes an omission</td></tr>
+      <tr><td><code>chain_head</code></td><td>Running hash over all prior steps</td></tr>
+      <tr><td><code>merkle_root</code> + <code>tree_size</code></td><td>Lets one record be proved without fetching the log</td></tr>
+      <tr><td><code>policy_bundle_hash</code></td><td>The exact policy in force — without it, a verdict cannot be re-derived</td></tr>
+      <tr><td><code>canonical_snapshot_hash</code></td><td>Commitment to what was actually evaluated</td></tr>
+      <tr><td><code>verdict</code></td><td>Allow, deny, modify, or escalate</td></tr>
+      <tr><td><code>measurement</code></td><td>What code was running, per the hardware</td></tr>
+    </table>
+
+    <h2>Three design choices worth understanding</h2>
+
+    <h3>The data never leaves</h3>
+    <p>The record carries a <em>hash</em> of what was evaluated, not the content. Anyone can
+    later confirm what was evaluated by hashing it, and your evidence store never becomes a
+    second copy of your customer database. For a regulated environment this is the difference
+    between an audit capability and a breach liability.</p>
+
+    <h3>History is load-bearing</h3>
+    <p>The step index and running hash tie each record to every record before it. Dropping an
+    inconvenient step breaks arithmetic rather than merely being impolite.</p>
+
+    <h3>The rules are pinned</h3>
+    <p>The policy bundle hash names the exact policy that produced this answer. "Which rules were
+    in force in March?" becomes something you check rather than something you reconstruct from a
+    change log and hope.</p>
+
+    <div class="box">
+      <div class="box-title">Ask for the schema, not the screenshot</div>
+      <p>A machine-readable schema, a canonical serialization, and published test vectors are
+      what make two implementations interoperate. Without them, two vendors both claiming
+      conformance will produce records that do not validate against each other — and the natural
+      fix, relaxing the comparison, silently removes the property the comparison existed to
+      provide.</p>
+    </div>
+  </div>
+  <div class="folio">8</div>
+</section>
+
+<!-- ============================================================ PART II -->
+<section class="page page--divider tone-c">
+  <svg class="divider-art" viewBox="0 0 300 300" fill="none">
+    <rect x="40" y="215" width="200" height="42" rx="7" fill="#f8f6f3" stroke="#0a0a0a" stroke-width="7"/>
+    <rect x="40" y="160" width="200" height="42" rx="7" fill="#f8f6f3" stroke="#0a0a0a" stroke-width="7"/>
+    <rect x="40" y="105" width="200" height="42" rx="7" fill="#cfff04" stroke="#0a0a0a" stroke-width="7"/>
+    <rect x="40" y="50" width="200" height="42" rx="7" fill="#0a0a0a" stroke="#0a0a0a" stroke-width="7"/>
+    <path d="M15 153h270" stroke="#bf000f" stroke-width="6" stroke-dasharray="16 11" stroke-linecap="round"/>
+  </svg>
+  <div>
+    <div class="pill">Part II</div>
+    <div class="divider-title">The four tiers and<br>the line that matters</div>
+    <p class="divider-blurb">Evidence is graded by whose honesty it depends on. Somewhere on that
+    ladder is a line: below it you are trusting somebody, above it you are checking. Where your
+    vendor sits is the only question you need to ask first.</p>
+  </div>
+  <div class="folio">9</div>
+</section>
+
+<section class="page">
+  <div class="page-tag">Part II · The four tiers</div>
+  <h1>Grading evidence by whom you must trust</h1>
+  <div class="cols">
+    <p>Most assurance schemes grade by <em>how much</em> was checked. This one grades by
+    <em>who you have to believe</em>, because that is the axis a buyer can actually act on.</p>
+
+    <div class="tier-strip">
+      <div class="t1"><span class="tn">Tier 1</span>Self-reported. The system says what it did.</div>
+      <div class="t2"><span class="tn">Tier 2</span>Operator-attested. Signed, but by the operator.</div>
+      <div class="t3"><span class="tn">Tier 3</span>Mechanism-generated, externally anchored.</div>
+      <div class="t4"><span class="tn">Tier 4</span>Self-enforcing. Refusal is structural.</div>
+    </div>
+
+    <h2>Tier 1 — Self-reported</h2>
+    <p>The system's own account. Useful for operations, worthless in a dispute, because the party
+    with the incentive controls the record. Almost every agent deployment in production today is
+    here, including many that describe themselves otherwise.</p>
+
+    <h2>Tier 2 — Operator-attested</h2>
+    <p>Records are signed and chained, so tampering is detectable — <em>by anyone who has the
+    keys and the log</em>, both of which the operator holds. This is a real improvement and it
+    catches careless failure. It does not survive a determined operator, because the operator can
+    rewrite history and re-sign it. We demonstrated exactly this against our own implementation.</p>
+
+    <h2>Tier 3 — Mechanism-generated and anchored</h2>
+    <p>Evidence is produced inside an attested environment, and chain roots are published outside
+    the operator's control at a declared interval. Now the operator cannot rewrite history without
+    contradicting something already public, and a third party can check without asking permission.
+    <strong>This is the binary threshold.</strong></p>
+
+    <h2>Tier 4 — Self-enforcing</h2>
+    <p>The mechanism does not merely record; it refuses. When evidence cannot be generated,
+    in-scope actions stop — and the halt is enforced somewhere the operator cannot reach, which
+    in practice means at the relying party. Tier 4 is not "better logging." It is the difference
+    between a system that documents a violation and one that cannot commit it.</p>
+
+    <div class="box box--ink">
+      <div class="box-title">The one question</div>
+      <p><em>If your operator wanted to hide an action, what would stop them?</em></p>
+      <p>Tier 1: nothing. Tier 2: their own controls. Tier 3: arithmetic that is already public.
+      Tier 4: the action would not have completed.</p>
+    </div>
+  </div>
+  <div class="folio">10</div>
+</section>
+
+<section class="page">
+  <div class="page-tag">Part II · The four tiers</div>
+  <h1>The binary threshold</h1>
+  <div class="cols">
+    <p>Between Tier 2 and Tier 3 is a discontinuity, not a gradient. Below it, the evidence is
+    ultimately backed by somebody's word. Above it, it is backed by something anyone can check.
+    No amount of Tier 2 adds up to Tier 3, in the same way no amount of a promise adds up to a
+    receipt.</p>
+
+    <figure class="figure">
+      <img src="figures/tier-ladder-light.svg" alt="The verifiability tier ladder">
+      <figcaption>The ladder, with the threshold marked. Requirement levels are aligned
+      one-to-one with tiers: meeting the Level-3 requirements is what makes evidence gradable at
+      Tier 3.</figcaption>
+    </figure>
+
+    <h2>What crossing it requires</h2>
+    <p>Three things, and all three are needed — this is the part where partial credit does not
+    exist:</p>
+    <ul>
+      <li><strong>Attested generation.</strong> Evidence is produced inside an environment whose
+      code identity is measured, with signing keys the operator cannot extract.</li>
+      <li><strong>External anchoring.</strong> Chain roots are published outside operator control
+      within a declared maximum interval, which bounds how much recent history can be hidden.</li>
+      <li><strong>Non-equivocation.</strong> Some mechanism — gossip between verifiers, a witness
+      quorum, or a consensus ledger — stops two different histories being shown to two different
+      parties.</li>
+    </ul>
+
+    <p>Miss any one and you are at Tier 2 with extra steps. Anchoring without attestation
+    publishes a root the operator computed. Attestation without anchoring lets the operator
+    withhold the recent past. Both without non-equivocation lets them show you a different
+    history than they show your regulator.</p>
+
+    <div class="box box--red">
+      <div class="box-title">Where this most often goes wrong</div>
+      <p>A vendor implements attestation, publishes roots to their own transparency log, and
+      claims Tier 3. But if only one verifier ever reads that log, equivocation is undetectable
+      — non-equivocation is a property of the <em>ecosystem</em>, not of the product.</p>
+      <p>Ask: how many independent parties check your roots, and what happens when two of them
+      disagree?</p>
+    </div>
+  </div>
+  <div class="folio">11</div>
+</section>
+
+<section class="page">
+  <div class="page-tag">Part II · The four tiers</div>
+  <h1>What Tier 3 does <em>not</em> mean</h1>
+  <div class="cols">
+    <p class="lead">The standard currently says that at Tier 3 "there is nobody left to trust."
+    That sentence is wrong, and we can show it is wrong rather than suspect it.</p>
+
+    <p>We deployed the reference implementation inside a real Intel TDX trust domain and wrote
+    down what a verifier must actually accept in order to believe a single measurement:</p>
+
+    <table>
+      <tr><th style="width:30%">You must trust</th><th>To believe</th></tr>
+      <tr><td><strong>Intel</strong></td><td>the TDX module and CPU behave as specified, and the provisioning key was not misissued</td></tr>
+      <tr><td><strong>Intel's certification service</strong></td><td>the collateral fetched to check the quote is authentic</td></tr>
+      <tr><td><strong>The quoting enclave</strong></td><td>it signs reports honestly</td></tr>
+      <tr><td><strong>Your cloud provider</strong></td><td>the host does not extract domain memory by a route outside the hardware threat model</td></tr>
+      <tr><td><strong>Whoever publishes reference values</strong></td><td>the measurement you compare against belongs to the code you believe it does</td></tr>
+    </table>
+
+    <p><strong>Anchoring removes none of these.</strong> It makes the <em>history</em> publicly
+    auditable — a real and valuable property, and the reason Tier 3 is worth reaching. But the
+    <em>measurement</em> is still established by that chain of parties.</p>
+
+    <h2>Two properties, routinely conflated</h2>
+
+    <p><strong>Public verifiability</strong> means anyone can check the evidence with published
+    tools, without the operator's permission. Hardware attestation and anchoring genuinely
+    deliver this.</p>
+
+    <p><strong>Trust independence</strong> means no party's honesty is load-bearing. Attestation
+    does <em>not</em> deliver this. It relocates trust from the operator — who has a direct
+    interest in your incident — to a hardware vendor, who has a diffuse one. That relocation is
+    a real security gain. It is not elimination.</p>
+
+    <h2>Why we are telling you this</h2>
+
+    <p>Because you will be sold the stronger claim, possibly by us, and you should be able to
+    price it correctly. A vendor saying "cryptographically verifiable, zero trust required" is
+    describing public verifiability and calling it trust independence. The right response is not
+    to reject the claim — public verifiability is worth a great deal — but to ask for the list
+    above, filled in for their deployment.</p>
+
+    <div class="box">
+      <div class="box-title">What to require in a claim</div>
+      <p>Every conformance claim must publish its <strong>trust-assumption disclosure</strong>:
+      for each evidence mechanism, every party, hardware element, and mathematical assumption
+      that must hold. A vendor who cannot produce that page has not thought about it, and a
+      vendor whose page is short is either unusually elegant or not being straight with you.</p>
+    </div>
+  </div>
+  <div class="folio">12</div>
+</section>
+
+<section class="page">
+  <div class="page-tag">Part II · The four tiers</div>
+  <h1>Placing yourself honestly</h1>
+  <div class="cols">
+    <p>Work through this against a deployment you already run. Most organizations discover they
+    are at Tier 1 with good intentions.</p>
+
+    <h3>Tier 1 → Tier 2</h3>
+    <ul class="checklist">
+      <li>Every consequential action passes an interception point the agent cannot bypass</li>
+      <li>Records are signed and hash-chained; altering one breaks verification</li>
+      <li>Records carry monotonic sequence numbers, so a gap is detectable</li>
+      <li>Evidence is written <em>before</em> the action is released</li>
+      <li>Pipeline failures raise an alert and are themselves recorded</li>
+    </ul>
+
+    <h3>Tier 2 → Tier 3 (the threshold)</h3>
+    <ul class="checklist">
+      <li>Policy evaluation runs inside an attested environment with a measured code identity</li>
+      <li>Signing keys are held by the mechanism and no operator identity can extract them</li>
+      <li>The measurement is compared against a published reference value</li>
+      <li>The evidence key is cryptographically bound into the attestation itself</li>
+      <li>Chain roots are anchored outside operator control within a declared interval</li>
+      <li>A named non-equivocation mechanism is in place, with more than one participant</li>
+      <li>The effect channel is mediated — not just the decision attested</li>
+      <li>A verifier can prove one record is in the log without fetching the whole log</li>
+    </ul>
+
+    <h3>Tier 3 → Tier 4</h3>
+    <ul class="checklist">
+      <li>When evidence cannot be generated, in-scope actions are refused, not queued</li>
+      <li>The halt is enforced at the relying party, outside operator control</li>
+      <li>Fail-closed behaviour is demonstrated by test, not asserted in a document</li>
+    </ul>
+
+    <div class="box box--red">
+      <div class="box-title">The most common self-deception</div>
+      <p>"We have signed audit logs, so we're Tier 2 at least." Ask who holds the signing key.
+      If the answer is your logging service, and your logging service is operated by the same
+      team that operates the agent, then the signature attests that your infrastructure produced
+      the record — which was never in doubt.</p>
+    </div>
+  </div>
+  <div class="folio">13</div>
+</section>
+
+<!-- ============================================================ PART III -->
+<section class="page page--divider tone-b">
+  <svg class="divider-art" viewBox="0 0 300 300" fill="none">
+    <circle cx="150" cy="150" r="112" fill="none" stroke="#0a0a0a" stroke-width="7"/>
+    <circle cx="150" cy="38"  r="26" fill="#cfff04" stroke="#0a0a0a" stroke-width="6"/>
+    <circle cx="247" cy="94"  r="26" fill="#f8f6f3" stroke="#0a0a0a" stroke-width="6"/>
+    <circle cx="247" cy="206" r="26" fill="#f8f6f3" stroke="#0a0a0a" stroke-width="6"/>
+    <circle cx="150" cy="262" r="26" fill="#cfff04" stroke="#0a0a0a" stroke-width="6"/>
+    <circle cx="53"  cy="206" r="26" fill="#f8f6f3" stroke="#0a0a0a" stroke-width="6"/>
+    <circle cx="53"  cy="94"  r="26" fill="#f8f6f3" stroke="#0a0a0a" stroke-width="6"/>
+    <circle cx="150" cy="150" r="40" fill="#0a0a0a"/>
+  </svg>
+  <div>
+    <div class="pill">Part III</div>
+    <div class="divider-title">The six domains:<br>what to evidence</div>
+    <p class="divider-blurb">Verification is not one question. It is six, and a deployment can be
+    excellent at one and absent at another — which is why a single "we're compliant" tells you
+    almost nothing.</p>
+  </div>
+  <div class="folio">14</div>
+</section>
+
+<section class="page">
+  <div class="page-tag">Part III · The six domains</div>
+  <h1>Provenance, Privacy, Portability</h1>
+  <div class="cols">
+    <h2>C1 · Provenance — which model ran</h2>
+    <p>Artifact lineage: model identity by digest, signed manifests, supply-chain verification,
+    and the composition of the agent itself — its tools, prompt, and model manifest.</p>
+    <p><strong>What to ask for.</strong> The digest of the model actually loaded, verified at
+    load time rather than recorded at deploy time. An agent bill of materials carried in every
+    record. And the honest question: <em>does the AgBOM update when the agent retrieves a
+    document into context, or only when you redeploy?</em></p>
+    <p class="nobreak"><strong>Where it is weak today.</strong> Build-time provenance is mature;
+    runtime composition is not. An agent's effective composition changes continuously as it
+    retrieves context and writes memory, and most implementations commit to a manifest captured
+    at task start. That is accurate and close to useless for an incident three steps later.</p>
+
+    <h2>C2 · Privacy — what data was touched</h2>
+    <p>What was read and written, evidenced <em>without re-leaking it</em>. Records commit to a
+    digest of the data, never the content.</p>
+    <p><strong>What to ask for.</strong> Confirmation that the evidence store holds commitments
+    rather than payloads — otherwise your audit trail is a second copy of your most sensitive
+    data, with a longer retention period and broader access than the original.</p>
+    <p><strong>What to watch.</strong> Digests hide content, not metadata. Timing, volume,
+    ordering, and target resources remain visible in the chain. For a health or financial
+    workload, decide explicitly whether that metadata is acceptable in an externally anchored
+    log, because anchoring is what makes it durable.</p>
+
+    <h2>C3 · Portability — boundary crossings</h2>
+    <p>Movement between organizational, jurisdictional, and compute boundaries: which boundary,
+    when, under what authority, and whether the evidence chain survives the crossing.</p>
+    <p><strong>What to ask for.</strong> If your agent moves between clouds or vendors, ask what
+    joins the two evidence chains. The usual answer is nothing — each side is internally
+    tamper-evident with an unexamined gap between them, and the gap is exactly where something
+    would be hidden.</p>
+    <p><strong>Be aware.</strong> This is the least developed area of the standard, with five
+    requirements, and the working group has not yet settled whether cross-domain continuity is a
+    portability concern or a fifth evidence property. If multi-cloud agents are on your roadmap,
+    this is where to apply pressure.</p>
+  </div>
+  <div class="folio">15</div>
+</section>
+
+<section class="page">
+  <div class="page-tag">Part III · The six domains</div>
+  <h1>Authorization, Identity, Security</h1>
+  <div class="cols">
+    <h2>C4 · Authorization — authority and its limits</h2>
+    <p>The grant, per-action evaluation against it, blocking at the interception point, parameter
+    schema validation, per-task credentials, and human approval records.</p>
+    <p><strong>The requirement most deployments lack: path-aware evaluation.</strong> Authority
+    must be evaluated against the <em>sequence</em>, not just the action. Reading a customer
+    record is permitted. Sending an email is permitted. Reading the record and then sending it is
+    an exfiltration, and a per-action check permits it at every step.</p>
+    <p><strong>What to ask for.</strong> Whether the policy engine sees the path. Then ask what
+    it costs you — a path-aware monitor with no way to clear an accumulated label refuses around
+    42% of perfectly legitimate work, which is why the next question matters more.</p>
+    <p><strong>The follow-up that separates real deployments from demos.</strong> How does the
+    monitor <em>verify</em> a declassification? We measured this: declassification the monitor
+    cannot check trades 1.6 points of detection for every point of false-rejection relief, and at
+    full coverage detection reaches zero. Verified declassification — where a trusted redaction
+    tool genuinely removes the content — improves both at once.</p>
+
+    <h2>C5 · Identity — which agent, whose authority</h2>
+    <p>A stable identifier for the agent instance, binding to the initiating principal, and
+    credentials bound to an attested environment.</p>
+    <p><strong>What to ask for.</strong> That the agent's credential is bound to the measured
+    environment, not merely issued to it — the key digest carried inside the attestation, so the
+    statement is "this key lives in this measured environment" rather than two facts that arrived
+    together.</p>
+    <p><strong>Open question worth tracking.</strong> Whether an agent can be accountable and
+    unlinkable at once. Today an agent transacting with a vendor reveals your organization, your
+    user, and your activity volume with every action. Under data-minimization obligations that is
+    hard to defend, and the standard does not yet offer an answer.</p>
+
+    <h2>C6 · Security — the environment held</h2>
+    <p>Execution environment integrity, hardware-rooted attestation, sandboxing of generated code
+    and untrusted tools, and evidence key lifecycle.</p>
+    <p><strong>What to ask for.</strong> Which platform, which measurement, compared against
+    whose published reference values — and how often the measurement is refreshed. That last one
+    matters more than it sounds, for reasons on page 21.</p>
+    <p><strong>And on retention.</strong> If evidence must remain believable for seven years,
+    ask what happens when the signature scheme does not. Post-quantum or hybrid signing costs
+    size, not speed.</p>
+  </div>
+  <div class="folio">16</div>
+</section>
+
+<section class="page">
+  <div class="page-tag">Part III · The six domains</div>
+  <h1>How much of this you already have</h1>
+  <div class="cols">
+    <p>Before adopting anything new, it is fair to ask how much your existing frameworks already
+    cover. We coded all 127 requirements against eight external frameworks, requirement by
+    requirement.</p>
+
+    <figure class="figure">
+      <img src="figures/mapping-coverage-light.svg" alt="Framework coverage of Proof-of-Control requirements">
+      <figcaption>Coverage means (exact + partial) matches over 127 requirements. These are
+      single-coder seed estimates with a known upward bias — treat the direction as informative
+      and the values as provisional.</figcaption>
+    </figure>
+
+    <h2>The finding that matters</h2>
+
+    <p>The partial column is enormous and the exact column is nearly empty. <strong>Five of the
+    eight frameworks have zero exact matches.</strong></p>
+
+    <p>Read that carefully, because it is the whole argument in one number. These frameworks ask
+    for nearly every <em>control</em> this standard asks for. What they do not ask for,
+    essentially anywhere, is <em>machine-made evidence that the control actually held, checkable
+    by someone who does not trust you.</em></p>
+
+    <p>Your SOC 2 report says a control was designed and operating. It does not produce an
+    artifact your customer's auditor can independently verify without asking you for it. That is
+    not a criticism of SOC 2 — it is a different instrument for a different purpose, and it was
+    designed before the party being audited could act four hundred times an hour.</p>
+
+    <h2>What this means practically</h2>
+
+    <p>You are probably closer than you think on controls and further than you think on evidence.
+    The gap concentrates in three places: <strong>grading evidence by how independently it can be
+    checked</strong>, <strong>disclosing what must still be trusted</strong>, and
+    <strong>self-enforcing execution</strong>. Those are the requirements no existing framework
+    asks for, and they are the reason this standard exists rather than a profile of an existing
+    one.</p>
+
+    <div class="box">
+      <div class="box-title">Using this in a gap analysis</div>
+      <p>If you already run SOC 2 or ISO 42001, start from the crosswalks rather than from
+      zero. Roughly half to two-thirds of what this standard asks for maps to something you
+      already do — the work is upgrading those from documented to evidenced, not building them.</p>
+    </div>
+  </div>
+  <div class="folio">17</div>
+</section>
+
+<!-- ============================================================ PART IV -->
+<section class="page page--divider tone-d">
+  <svg class="divider-art" viewBox="0 0 300 300" fill="none">
+    <rect x="28" y="112" width="76" height="76" rx="9" fill="#f8f6f3" stroke="#0a0a0a" stroke-width="7"/>
+    <rect x="112" y="112" width="76" height="76" rx="9" fill="#cfff04" stroke="#0a0a0a" stroke-width="7"/>
+    <rect x="196" y="112" width="76" height="76" rx="9" fill="#f8f6f3" stroke="#0a0a0a" stroke-width="7"/>
+    <path d="M104 150h8M188 150h8" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round"/>
+    <path d="M150 112V56M150 188v56" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="150" cy="42" r="16" fill="#0a0a0a"/>
+    <rect x="122" y="252" width="56" height="26" rx="13" fill="#0a0a0a"/>
+  </svg>
+  <div>
+    <div class="pill">Part IV</div>
+    <div class="divider-title">What it takes<br>to run</div>
+    <p class="divider-blurb">Where to intercept, what it costs on real hardware, and the failure
+    modes we found by building it — including three that were defects in our own implementation.</p>
+  </div>
+  <div class="folio">18</div>
+</section>
+
+<section class="page">
+  <div class="page-tag">Part IV · What it takes to run</div>
+  <h1>The reference architecture</h1>
+  <div class="cols">
+    <figure class="figure">
+      <img src="figures/reference-architecture-light.svg" alt="Reference architecture">
+      <figcaption>Policy evaluation happens inside the attested environment. The gateway
+      mediates every action. The relying party checks a capability before performing any
+      effect.</figcaption>
+    </figure>
+
+    <h2>Where to intercept</h2>
+    <p>Eight lifecycle points. Which you instrument determines what your evidence can answer,
+    and instrumenting only the last one is the most common shortcut.</p>
+
+    <table>
+      <tr><th style="width:44%">Point</th><th>Answers</th></tr>
+      <tr><td>Task initialization</td><td>What was asked, by whom</td></tr>
+      <tr><td>Context assembly</td><td>What informed the decision</td></tr>
+      <tr><td>Plan generation</td><td>What it intended</td></tr>
+      <tr class="hi"><td>Pre-call tool invocation</td><td>What it was about to do</td></tr>
+      <tr><td>Post-call tool result</td><td>What came back</td></tr>
+      <tr><td>Memory write</td><td>What will influence future runs</td></tr>
+      <tr><td>Sub-agent delegation</td><td>What authority was passed on</td></tr>
+      <tr><td>Task completion</td><td>What it claims it did</td></tr>
+    </table>
+
+    <p>The highlighted row is the one that must be non-negotiable: it is the last moment before
+    an effect leaves your boundary, and it is where a capability can still be checked.</p>
+
+    <h2>Three implementation decisions</h2>
+
+    <h3>Where policy runs</h3>
+    <p>Inside the attested environment, or the measurement attests nothing relevant. A policy
+    engine running outside the enclave, feeding results in, produces evidence that an enclave
+    signed a number somebody else computed.</p>
+
+    <h3>How the effect is bound</h3>
+    <p>The capability must carry something the far end can recompute <em>unaided</em>. We
+    learned this the hard way — see page 22.</p>
+
+    <h3>How often you anchor</h3>
+    <p>The anchoring interval bounds how much recent history can be hidden. It is arithmetic:
+    decide how many actions you could tolerate an adversary concealing, divide by your action
+    rate. Publishing every second costs under a hundredth of a percent of wall-clock time and
+    leaves roughly 5,000 actions in the window.</p>
+  </div>
+  <div class="folio">19</div>
+</section>
+
+<section class="page">
+  <div class="page-tag">Part IV · What it takes to run</div>
+  <h1>What it costs</h1>
+  <div class="cols">
+    <p>Measured against a design budget of 15 ms per intercepted action — the point at which
+    users notice — on a working implementation rather than an estimate.</p>
+
+    <div class="stat-row">
+      <div class="stat"><div class="n">201 µs</div><div class="l">Full evidence pipeline per action, software</div></div>
+      <div class="stat"><div class="n">1.3%</div><div class="l">Of the 15 ms budget</div></div>
+      <div class="stat"><div class="n">6.2%</div><div class="l">Added by running inside a real TEE</div></div>
+    </div>
+
+    <table>
+      <tr><th style="width:52%">Component</th><th class="num">Mean</th><th class="num">p99</th></tr>
+      <tr><td>Canonicalization and digest</td><td class="num">3.7 µs</td><td class="num">8.0 µs</td></tr>
+      <tr><td>Policy evaluation (path-aware)</td><td class="num">0.4 µs</td><td class="num">1.1 µs</td></tr>
+      <tr><td>Signing (Ed25519)</td><td class="num">84.3 µs</td><td class="num">110.1 µs</td></tr>
+      <tr><td>Chain and tree append</td><td class="num">0.7 µs</td><td class="num">3.7 µs</td></tr>
+      <tr class="hi"><td><strong>End-to-end per action</strong></td><td class="num"><strong>201.5 µs</strong></td><td class="num"><strong>254.8 µs</strong></td></tr>
+    </table>
+
+    <p>Signing dominates at roughly 87%. The policy evaluation everyone worries about is
+    negligible, and — importantly — <strong>stays</strong> negligible: cost per step is flat from
+    10 to 50,000 steps, because the monitor keeps a bounded summary rather than re-reading the
+    whole history.</p>
+
+    <h2>The number that surprised us</h2>
+
+    <p>We deployed on real Intel TDX hardware with an identical non-confidential instance as a
+    control. Running <em>inside</em> a trust domain costs 6.2% — about ten microseconds. That is
+    the good news, and it was previously unmeasured.</p>
+
+    <p>Producing a hardware <em>quote</em> costs <strong>39.5 ms</strong>. That is 2.6× the
+    entire per-action budget on its own.</p>
+
+    <table>
+      <tr><th>Quote refreshed every</th><th class="num">Cost per action</th></tr>
+      <tr><td>1 action</td><td class="num">39,666 µs</td></tr>
+      <tr><td>10 actions</td><td class="num">4,113 µs</td></tr>
+      <tr><td>100 actions</td><td class="num">557 µs</td></tr>
+      <tr class="hi"><td>1,000 actions</td><td class="num">202 µs</td></tr>
+    </table>
+
+    <p>Per-action attestation is not expensive, it is impossible. Every real deployment
+    amortizes — which means your actions rest on a measurement taken <em>before</em> them.
+    <strong>Ask your vendor for their attestation refresh interval.</strong> If they have not
+    thought about it, they have an exposure window they have not measured.</p>
+
+    <div class="box">
+      <div class="box-title">Budgeting for evidence</div>
+      <p>Storage: roughly 1.3 GB per million actions classically. Post-quantum signatures raise
+      that about eightfold — and switching the encoding from JSON to CBOR halves it back, which
+      saves more than the algorithm choice costs.</p>
+    </div>
+  </div>
+  <div class="folio">20</div>
+</section>
+
+<section class="page">
+  <div class="page-tag">Part IV · What it takes to run</div>
+  <h1>Auditing without downloading everything</h1>
+  <div class="cols">
+    <p>An operational question that decides whether audit is continuous or annual: to check that
+    one action is genuinely in the log, how much do you have to fetch?</p>
+
+    <p>With a plain hash chain, all of it. Each link depends on the previous one, so proving
+    record 500,000 means replaying from the beginning. An auditor spot-checking a single action
+    downloads the entire log.</p>
+
+    <p>With an append-only Merkle tree — the structure Certificate Transparency has used since
+    2013 — the answer is a proof logarithmic in log size.</p>
+
+    <table>
+      <tr><th>Log size</th><th class="num">Replay chain</th><th class="num">Check a proof</th></tr>
+      <tr><td>1,000 records</td><td class="num">1.2 MB</td><td class="num">1.5 kB</td></tr>
+      <tr><td>10,000</td><td class="num">12.3 MB</td><td class="num">1.7 kB</td></tr>
+      <tr class="hi"><td>100,000</td><td class="num">122.7 MB</td><td class="num">1.8 kB</td></tr>
+    </table>
+
+    <p>At 100,000 records that is roughly <strong>69,000 times less data</strong>, and the gap
+    widens with every record written because one cost is linear and the other logarithmic.</p>
+
+    <p>In operational terms: a thousand agents at a hundred actions a day produce 36.5 million
+    records a year. Spot-checking one sampled action costs about 2 kB. Replaying the chain costs
+    44.8 GB — and costs the same whether you wanted to check one record or a million.</p>
+
+    <h2>The second proof type, which matters more</h2>
+
+    <p>A <strong>consistency proof</strong> establishes that today's log is an append-only
+    extension of the one published last week — that nothing was rewritten in between. This is
+    the check that catches an operator who holds the signing key, and it is worth understanding
+    why.</p>
+
+    <p>Given the key, an operator can alter a record in the middle of the log, recompute every
+    link after it, and re-sign the whole history. The result has exactly the right length, every
+    signature verifies, and replaying it finds nothing wrong — because there <em>is</em> nothing
+    internally wrong with it. It is a perfectly consistent history of events that did not
+    happen.</p>
+
+    <p>The only thing that contradicts it is a root published <em>before</em> the rewrite. Which
+    means the check is not "does the log verify" but "does the log agree with what was already
+    public."</p>
+
+    <div class="box box--red">
+      <div class="box-title">A question that finds real bugs</div>
+      <p>Ask: <em>when you verify a log against a published anchor, do you compare the record
+      count, or the root?</em></p>
+      <p>Comparing the count catches truncation and misses rewriting entirely. Our own verifier
+      made exactly this mistake and accepted a forged history until we found it — which is why
+      the requirement now says "compares the recomputed root against the anchored value rather
+      than only against a step count."</p>
+    </div>
+  </div>
+  <div class="folio">21</div>
+</section>
+
+<section class="page">
+  <div class="page-tag">Part IV · What it takes to run</div>
+  <h1>How it fails</h1>
+  <div class="cols">
+    <p>We built an attack harness that runs eleven scenarios twice — once against a system
+    missing the relevant requirement, once with it. All eleven succeed when the requirement is
+    absent. Three of them were live defects in our own implementation, found by review rather
+    than by design.</p>
+
+    <table>
+      <tr><th style="width:38%">Attack</th><th>Without the requirement</th></tr>
+      <tr><td><strong>Snapshot substitution</strong></td><td>Evidence attests a benign action while a malicious one executes</td></tr>
+      <tr><td><strong>Log alteration</strong></td><td>Records edited with no trace</td></tr>
+      <tr><td><strong>Omission</strong></td><td>A dropped step looks like one that never happened</td></tr>
+      <tr><td><strong>Head truncation</strong></td><td>Recent history withheld; the remainder is perfect</td></tr>
+      <tr><td><strong>Equivocation</strong></td><td>Two histories, two parties, neither can tell</td></tr>
+      <tr><td><strong>Path composition</strong></td><td>Read and send each within grant; together an exfiltration</td></tr>
+      <tr><td><strong>Capability replay</strong></td><td>A bearer token reused for a second effect</td></tr>
+      <tr><td><strong>Pipeline failure</strong></td><td>System keeps acting while logging is down</td></tr>
+      <tr class="hi"><td><strong>History rewrite</strong></td><td>Key-holding operator rewrites and re-signs; replay finds nothing</td></tr>
+      <tr class="hi"><td><strong>Unconfigured mediation</strong></td><td>The binding check is enabled and silently does nothing</td></tr>
+      <tr class="hi"><td><strong>Ticket/record mismatch</strong></td><td>A valid capability shown beside the wrong record</td></tr>
+    </table>
+
+    <h2>The one to take personally</h2>
+
+    <p>The tenth is worth describing in full, because it is the failure most likely to be sitting
+    in a system you already run.</p>
+
+    <p>Our relying party performed the check that binds an executed action to the evidenced one.
+    It was enabled. It verified the signature, the measurement, the resource, and the nonce. And
+    it returned <em>match</em> whenever it could not actually perform the binding check —
+    because the check required a callback into the enclave that almost no real endpoint could
+    supply.</p>
+
+    <p>So an endpoint that believed it was enforcing would execute a substituted action and
+    report success. <strong>A security check whose default is "accept when unconfigured" is worse
+    than no check, because it tells you it worked.</strong></p>
+
+    <p>The fix was to give the relying party something it can recompute unaided — a digest of the
+    action itself, carried in the capability — and to refuse outright when it can do neither.</p>
+
+    <div class="box box--ink">
+      <div class="box-title">What to do with this</div>
+      <p>Take the eleven rows above to your own deployment and ask which you could survive. Then
+      ask your vendor to demonstrate — not describe — their behaviour under three: pipeline
+      failure, substitution, and a history rewrite by someone holding the key.</p>
+      <p>The third one is the one that separates Tier 2 from Tier 3, and it is the one most
+      implementations have never tested.</p>
+    </div>
+  </div>
+  <div class="folio">22</div>
+</section>
+
+<section class="page">
+  <div class="page-tag">Part IV · What it takes to run</div>
+  <h1>A phased rollout</h1>
+  <div class="cols">
+    <p>Nobody reaches Tier 3 in a quarter. A workable sequence, and what each phase buys.</p>
+
+    <h2>Phase 1 — Instrument (weeks)</h2>
+    <p>Stand up the interception gateway as a separate service. Route every consequential action
+    through it. Emit structured records at the pre-call point at minimum. Do not sign anything
+    yet.</p>
+    <p><em>Buys:</em> you learn what your agents actually do, which is usually a surprise, and
+    you find the bypass paths before an attacker does.</p>
+
+    <h2>Phase 2 — Make it tamper-evident (weeks)</h2>
+    <p>Sign records, hash-chain them, add monotonic sequence numbers. Move evidence emission
+    <em>before</em> action release. Add failure alerting.</p>
+    <p><em>Buys:</em> Tier 2, and detection of careless failure and outside tampering. Not
+    detection of a determined operator.</p>
+
+    <h2>Phase 3 — Cross the threshold (months)</h2>
+    <p>Move policy evaluation into an attested environment. Bind the evidence key into the
+    attestation. Anchor roots externally at a declared interval. Stand up a second independent
+    verifier so equivocation is detectable. Mediate the effect channel.</p>
+    <p><em>Buys:</em> Tier 3 — evidence a third party can check without trusting you. This is
+    the phase with real engineering cost and the one worth budgeting properly.</p>
+
+    <h2>Phase 4 — Make it refuse (months)</h2>
+    <p>Fail closed when evidence cannot be generated, with the halt enforced at the relying party.
+    Demonstrate it by test.</p>
+    <p><em>Buys:</em> Tier 4, and a class of incident that becomes structurally impossible rather
+    than merely detectable.</p>
+
+    <div class="box">
+      <div class="box-title">Sequencing advice</div>
+      <p>Do not scope this to every agent at once. Pick the deployment with the largest blast
+      radius — the one with write access to something you would have to disclose — and take that
+      one to Tier 3. The requirements are cumulative and the second deployment costs a fraction
+      of the first.</p>
+      <p>And declare your scope honestly. A narrow scope with strong evidence is defensible; a
+      broad claim resting on a narrow implementation is the thing auditors are trained to find.</p>
+    </div>
+  </div>
+  <div class="folio">23</div>
+</section>
+
+<!-- ============================================================ PART V -->
+<section class="page page--divider tone-e">
+  <svg class="divider-art" viewBox="0 0 300 300" fill="none">
+    <path d="M62 58h130l46 46v138a12 12 0 01-12 12H62a12 12 0 01-12-12V70a12 12 0 0112-12z" fill="#f8f6f3" stroke="#0a0a0a" stroke-width="7"/>
+    <path d="M190 58v48h48" stroke="#0a0a0a" stroke-width="7" stroke-linejoin="round"/>
+    <path d="M84 150h108M84 180h108M84 210h64" stroke="#0a0a0a" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="212" cy="216" r="46" fill="#cfff04" stroke="#0a0a0a" stroke-width="7"/>
+    <path d="M212 194v30M212 236v2" stroke="#0a0a0a" stroke-width="8" stroke-linecap="round"/>
+  </svg>
+  <div>
+    <div class="pill">Part V</div>
+    <div class="divider-title">Buying, auditing,<br>and claiming</div>
+    <p class="divider-blurb">The questions that separate a real implementation from a good deck,
+    how to read a conformance claim, and where regulation is heading.</p>
+  </div>
+  <div class="folio">24</div>
+</section>
+
+<section class="page">
+  <div class="page-tag">Part V · Buying, auditing, and claiming</div>
+  <h1>Questions for your vendor</h1>
+  <div class="cols">
+    <p>Ordered so the early ones disqualify quickly. If the first three do not get straight
+    answers, the rest will not matter.</p>
+
+    <ol class="asklist">
+      <li><strong>What tier do you claim, and what is the scope?</strong> Scope is where claims
+      go to hide. "Our platform is Tier 3" and "the payment-approval path is Tier 3" are very
+      different sentences.</li>
+      <li><strong>Can the agent reach any tool without passing your gateway?</strong> If yes,
+      nothing downstream is worth discussing. Ask them to demonstrate the attempt, not describe
+      the policy.</li>
+      <li><strong>Which of the three effect-mediation options do you implement?</strong>
+      Enclave-held credentials, capability-bound dispatch, or attested egress. "We attest the
+      decision" is not one of them, and is the most common answer.</li>
+      <li><strong>Who holds the signing key, and can any operator identity extract it?</strong>
+      Ask for the key-custody configuration, not the assertion.</li>
+      <li><strong>Where are chain roots anchored, and at what maximum interval?</strong> This
+      bounds how much recent history can be hidden. An undeclared interval is an unbounded one.</li>
+      <li><strong>How many independent parties check your roots?</strong> If the answer is one,
+      equivocation is undetectable and the Tier 3 claim is incomplete.</li>
+      <li><strong>What is your attestation refresh interval?</strong> A quote costs ~40 ms, so
+      everyone amortizes. The question is whether they know by how much.</li>
+      <li><strong>Show me your trust-assumption disclosure.</strong> Every party, hardware
+      element, and mathematical assumption that must hold. A missing page here means the question
+      has not been asked internally.</li>
+      <li><strong>Is your policy evaluation path-aware?</strong> And if so, how does the monitor
+      verify a declassification rather than merely observe one?</li>
+      <li><strong>Can I verify one record without downloading the log?</strong> Inclusion proofs.
+      Determines whether audit is continuous or annual.</li>
+      <li><strong>Show me a failed verification.</strong> Ask them to tamper with a record on a
+      test system and show you the tooling detecting it. Anyone who has actually built this can
+      do it in minutes.</li>
+      <li><strong>What happens when the evidence pipeline is down?</strong> If the system keeps
+      acting, it is Tier 2 at best regardless of everything else.</li>
+    </ol>
+  </div>
+  <div class="folio">25</div>
+</section>
+
+<section class="page">
+  <div class="page-tag">Part V · Buying, auditing, and claiming</div>
+  <h1>Reading a conformance claim</h1>
+  <div class="cols">
+    <p>A conformance statement has three stages, and the stage is doing more work than the
+    tier.</p>
+
+    <table>
+      <tr><th style="width:34%">Stage</th><th>What was actually checked</th></tr>
+      <tr><td><strong>Self-Declared</strong></td><td>The vendor asserts it. Nobody independent looked.</td></tr>
+      <tr><td><strong>Third-Party Assessed</strong></td><td>An assessor examined it at a point in time.</td></tr>
+      <tr><td><strong>Continuously Monitored</strong></td><td>Conformance is checked on an ongoing basis, with results available.</td></tr>
+    </table>
+
+    <p>A Self-Declared Tier 3 claim and a Third-Party Assessed Tier 2 claim are not comparable on
+    a single axis, and a vendor quoting only the tier is quoting the flattering half.</p>
+
+    <h2>What a claim must contain</h2>
+    <ul>
+      <li>The stage, and the tier per domain — not one tier for everything</li>
+      <li>The system boundary: components, environments, and action classes in scope</li>
+      <li>Every verifiable fact resolving to a specific evidence stream</li>
+      <li>The trust-assumption disclosure</li>
+      <li>Retention period, at least as long as the period the claim covers</li>
+      <li>Anchoring interval and attestation refresh interval</li>
+      <li>The version of the standard, and the date</li>
+    </ul>
+
+    <h2>Red flags</h2>
+
+    <div class="box box--red">
+      <div class="box-title">Six things that should slow you down</div>
+      <p><strong>1. One tier for the whole product.</strong> Domains differ. A uniform claim
+      suggests nobody assessed them separately.</p>
+      <p><strong>2. No trust-assumption disclosure.</strong> Either it was not thought about, or
+      it was and the page was inconvenient.</p>
+      <p><strong>3. "Zero trust required" or "trustless."</strong> Page 12. Ask for the list.</p>
+      <p><strong>4. Scope described in marketing terms.</strong> "Our AI platform" is not a
+      boundary. Components, environments, and action classes are.</p>
+      <p><strong>5. Attestation without effect mediation.</strong> Entitles them to claim the
+      evaluation is verifiable, not the action.</p>
+      <p><strong>6. A claim that has never failed anything.</strong> Every real implementation
+      has a list of what it does not cover. A vendor without one has not looked.</p>
+    </div>
+
+    <h2>The gaming problem, stated plainly</h2>
+    <p>Cryptographic evidence prevents log forgery. It does nothing about <strong>scope
+    gaming</strong>, because scope is still declared by the operator. A cryptographically perfect
+    claim over a narrow scope may mislead more effectively than a weak claim over a broad one —
+    precisely because it reads as rigorous. When you review a claim, spend your time on the
+    boundary section, not the cryptography.</p>
+  </div>
+  <div class="folio">26</div>
+</section>
+
+<section class="page">
+  <div class="page-tag">Part V · Buying, auditing, and claiming</div>
+  <h1>Running an audit</h1>
+  <div class="cols">
+    <p>The standard is written to be audited: every requirement is phrased as something you can
+    go and check, and every section carries auditor-evidence guidance naming what to collect and
+    what to test.</p>
+
+    <h2>How to scope it</h2>
+    <p>Requirement levels are aligned one-to-one with the tiers, so the tier being claimed tells
+    you which requirements are in scope. Auditing a Tier 3 claim means testing Levels 1 through 3;
+    Level 4 requirements only apply to a Tier 4 claim.</p>
+
+    <h2>Tests worth running yourself</h2>
+    <p>Documentation review will not find the failures that matter. These will.</p>
+
+    <table>
+      <tr><th style="width:40%">Test</th><th>What a pass looks like</th></tr>
+      <tr><td>Attempt a direct tool call from the agent runtime, bypassing the gateway</td><td>It fails — no network path, no credential</td></tr>
+      <tr><td>Make the evidence store unavailable, then submit an action</td><td>The action is refused and the failure is recorded</td></tr>
+      <tr><td>Submit action A for evaluation, attempt to dispatch action B</td><td>B is refused at the relying party</td></tr>
+      <tr><td>Alter one record in a test copy and run their verifier</td><td>Detected, with the record identified</td></tr>
+      <tr><td>Remove a record and re-present the log</td><td>Sequence gap detected</td></tr>
+      <tr><td>Rewrite a historical record and re-sign the whole chain</td><td>Rejected against the anchored root</td></tr>
+      <tr><td>Request an inclusion proof for one sampled record</td><td>Verifies against the published root without the rest of the log</td></tr>
+      <tr><td>Seed a test agent outside the declared inventory</td><td>It surfaces as a reconciliation finding</td></tr>
+    </table>
+
+    <p>The sixth is the one most implementations fail, and failing it means the claim is Tier 2
+    however it is labelled.</p>
+
+    <h2>What to collect</h2>
+    <ul>
+      <li>The conformance statement and its trust-assumption disclosure</li>
+      <li>Key-custody configuration showing no operator path to signing keys</li>
+      <li>Anchor records across an audit window — confirm none exceeds the declared interval</li>
+      <li>Attestation refresh records, same check</li>
+      <li>The evidence schema, and a sample of production records validated against it</li>
+      <li>Chain-verification job schedule and results</li>
+      <li>Fail-closed test results, dated</li>
+      <li>Your own audit reads, which should themselves appear in the access record</li>
+    </ul>
+
+    <p>That last one is a quiet integrity check: if reading the evidence store does not produce
+    its own record, access control over evidence is weaker than claimed.</p>
+  </div>
+  <div class="folio">27</div>
+</section>
+
+<section class="page">
+  <div class="page-tag">Part V · Buying, auditing, and claiming</div>
+  <h1>Where regulation lands</h1>
+  <div class="cols">
+    <p>Proof-of-Control does not replace anything you already answer to. It supplies the evidence
+    layer those regimes assume and rarely require.</p>
+
+    <table>
+      <tr><th style="width:30%">Regime</th><th>How this fits</th></tr>
+      <tr><td><strong>EU AI Act</strong></td><td>Art. 12 automatic logging and Art. 19 retention describe records; this makes them verifiable by someone who is not you. Relevant to high-risk obligations and post-market monitoring.</td></tr>
+      <tr><td><strong>SOC 2</strong></td><td>Same role in the ecosystem, with a cryptographic stage SOC 2 never had. Your CC7 controls stay; the evidence behind them upgrades.</td></tr>
+      <tr><td><strong>ISO/IEC 42001</strong></td><td>Requires an AI management system and documented control. This evidences that declared controls held at execution rather than at design.</td></tr>
+      <tr><td><strong>NIST AI RMF</strong></td><td>MEASURE and MANAGE functions need evidence to measure against. This supplies it.</td></tr>
+      <tr><td><strong>HIPAA</strong></td><td>Audit controls and integrity requirements map directly; the delta is operator independence.</td></tr>
+      <tr><td><strong>Zero Trust (SP 800-207)</strong></td><td>Complementary halves. Zero trust decides; this evidences the decision and what followed it.</td></tr>
+    </table>
+
+    <h2>The direction of travel</h2>
+    <p>Two things are converging. Regulators are moving from asking organizations to
+    <em>describe</em> their controls toward asking them to <em>demonstrate</em> them — and agents
+    are making description less credible by acting faster than any description can track.</p>
+
+    <p>The practical consequence for a security leader: the evidence you produce over the next
+    two years is what you will be asked to show for the period you produced it. Retention
+    obligations run backwards, and you cannot retroactively make a log tamper-evident.</p>
+
+    <h2>What to do about it now</h2>
+    <ul>
+      <li><strong>Declare scope early and narrowly.</strong> A defensible narrow claim beats an
+      indefensible broad one, and scope can widen later.</li>
+      <li><strong>Put the anchoring interval in the contract.</strong> It is the one parameter
+      that bounds an adversary's window, and it is trivially auditable.</li>
+      <li><strong>Require the trust-assumption disclosure as a deliverable</strong>, not a
+      courtesy. It is the document that ages worst if written after an incident.</li>
+      <li><strong>Match retention to the signature scheme.</strong> If evidence must be believable
+      in 2036, ask what happens to the signature before then.</li>
+    </ul>
+  </div>
+  <div class="folio">28</div>
+</section>
+
+<section class="page">
+  <div class="page-tag">Part V · Buying, auditing, and claiming</div>
+  <h1>A ninety-day plan</h1>
+  <div class="cols">
+    <h2>Days 1–30 · Establish the baseline</h2>
+    <ul class="checklist">
+      <li>Inventory every agent with write access to a system you would have to disclose about</li>
+      <li>For the top three by blast radius, answer: could an independent party establish what it did last Tuesday?</li>
+      <li>Place each honestly on the tier ladder using the checklist on page 13</li>
+      <li>Identify bypass paths — every route from agent to tool that skips a mediation point</li>
+      <li>Ask your three largest agent vendors the first four questions from page 25</li>
+    </ul>
+
+    <h2>Days 31–60 · Close the obvious gaps</h2>
+    <ul class="checklist">
+      <li>Route the highest-blast-radius deployment through a gateway it cannot bypass</li>
+      <li>Move evidence emission before action release, and measure the latency cost</li>
+      <li>Sign and chain records; add sequence numbers</li>
+      <li>Run the eight audit tests from page 27 against your own system and record what fails</li>
+      <li>Draft a scope declaration for the one deployment you would defend publicly</li>
+    </ul>
+
+    <h2>Days 61–90 · Decide on the threshold</h2>
+    <ul class="checklist">
+      <li>Determine whether Tier 3 is warranted for this deployment — it is not always</li>
+      <li>If yes, scope the attested-environment work and the anchoring design</li>
+      <li>Identify a second independent verifier; without one, non-equivocation is unavailable</li>
+      <li>Choose an anchoring interval by arithmetic: tolerable hidden actions ÷ action rate</li>
+      <li>Write the trust-assumption disclosure. It will be uncomfortable, which is the point</li>
+    </ul>
+
+    <div class="box box--ink">
+      <div class="box-title">If you do only one thing</div>
+      <p>Take your highest blast-radius agent and try to answer, using only what exists today,
+      what it did on a specific day last month — <em>without</em> asking the team that operates
+      it.</p>
+      <p>The difficulty of that exercise is your verifiability gap, measured in the only units
+      that matter. Most organizations find they cannot complete it, and the discovery is worth
+      more than any framework document.</p>
+    </div>
+  </div>
+  <div class="folio">29</div>
+</section>
+
+<!-- ============================================================ CLOSING -->
+<section class="page">
+  <h1>From principles to practice</h1>
+  <div class="cols">
+    <p class="lead">The gap between what a system asserts about itself and what anyone else can
+    establish is not new. Agents make it consequential, because they act faster than the
+    assertion can be checked and more often than anyone can sample.</p>
+
+    <p>Closing it does not require believing anything about AI. It requires one architectural
+    commitment — that the mechanism which enforces also produces the record — and then a series
+    of unglamorous engineering decisions about where to intercept, what to sign, how often to
+    anchor, and what happens when the pipeline breaks.</p>
+
+    <p>The measurements in this guide should be reassuring on cost and sobering on effort. The
+    cryptography is not the hard part: the full evidence pipeline costs about 1.3% of a
+    fifteen-millisecond budget, and running inside a real trust domain adds six percent. The hard
+    parts are architectural — routing every action through a gateway with no bypass, mediating
+    the effect channel, finding a second verifier who will actually check your roots — and
+    organizational, because someone has to own a scope declaration they would defend in public.</p>
+
+    <h2>Three things to carry away</h2>
+
+    <p><strong>Grade evidence by whom you must trust.</strong> Not by volume, retention, or how
+    sophisticated it sounds. That single axis converts an unbounded technical evaluation into one
+    question you can put to a vendor and get a checkable answer to.</p>
+
+    <p><strong>The threshold is real and it is binary.</strong> Below it, your evidence is
+    ultimately somebody's word. Above it, it is arithmetic anyone can redo. No quantity of
+    Tier 2 accumulates into Tier 3, and the three things required to cross — attested generation,
+    external anchoring, non-equivocation — admit no partial credit.</p>
+
+    <p><strong>Ask what is still trusted, and expect a list.</strong> A framework that claims to
+    have eliminated trust has relocated it somewhere you have not looked. The useful vendor is
+    not the one with no assumptions; it is the one who can hand you theirs.</p>
+
+    <h2>What we would tell a security leader starting Monday</h2>
+
+    <p>Do not begin with the standard. Begin with the exercise on page 29: pick your highest
+    blast-radius agent and try to reconstruct a specific day without asking the team that runs
+    it. Whatever you cannot establish is the thing to fix first, and it will be more specific and
+    more actionable than any requirement list.</p>
+
+    <p>Then take one deployment — not all of them — to Tier 3 properly. The requirements are
+    cumulative and the second deployment costs a fraction of the first. An organization with one
+    genuinely verifiable agent and an honest scope declaration is in a considerably stronger
+    position than one with a platform-wide claim nobody has tested.</p>
+
+    <div class="quote">
+      <p>&ldquo;Prove, rather than promise, what your agents did.&rdquo;</p>
+      <p class="attrib">If any of this is wrong, it should be possible for you to find out —
+      which, in the end, is the entire point.</p>
+    </div>
+  </div>
+  <div class="folio">30</div>
+</section>
+
+<section class="page">
+  <h1>What this does not do</h1>
+  <div class="cols">
+    <p class="lead">A framework that only lists its strengths is a marketing document. Here is
+    the other half, including one place the standard currently overclaims and has not yet been
+    fixed.</p>
+
+    <h2>It does not verify that the output was right</h2>
+    <p>This establishes deterministic facts about execution: which model ran, on whose authority,
+    with what input, producing what effect. It says nothing about whether the answer was correct,
+    fair, or wise — or whether the boundaries someone set were the right boundaries. Those remain
+    human judgments, and any product that blurs the line will eventually be used to launder one
+    as the other.</p>
+
+    <h2>It does not eliminate trust at Tier 3</h2>
+    <p>Our own tier definitions say that at Tier 3 "there is nobody left to trust." That is
+    wrong, and page 12 is the five-party list that shows it. Anchoring delivers public
+    verifiability, not trust independence. Fixing the definitions properly is a change to the
+    standard we have identified and not yet made.</p>
+
+    <h2>It does not prevent scope gaming</h2>
+    <p>Scope is declared by the operator. Cryptographic evidence over a narrow scope is
+    cryptographically perfect and potentially more misleading than weak evidence over a broad
+    one, because it reads as rigorous.</p>
+
+    <h2>It does not survive a compromised hypervisor</h2>
+    <p>We deployed on real Intel TDX hardware and measured what it costs. We did not compromise a
+    hypervisor, and the cloud provider operates the one underneath. What we showed is that the
+    construction works on hardware that <em>claims</em> to resist a hostile host — not that the
+    resistance holds.</p>
+
+    <h2>It does not solve unlinkable identity</h2>
+    <p>An agent transacting with a third party currently reveals your organization, your user, and
+    your activity volume with every action. Whether accountability and unlinkability can coexist
+    is an open question in the working group, not a solved one.</p>
+
+    <h2>It does not make cross-boundary evidence continuous</h2>
+    <p>When an agent moves between clouds or vendors, each side can be internally tamper-evident
+    with nothing joining them. The construction that closes that seam is not yet specified.</p>
+
+    <div class="box">
+      <div class="box-title">Why print this</div>
+      <p>Because you will be evaluating vendors against this standard, and the ones worth buying
+      from will have their own version of this page. A supplier who cannot tell you what their
+      system does not establish has either not looked or would rather you did not.</p>
+    </div>
+  </div>
+  <div class="folio">31</div>
+</section>
+
+<section class="page">
+  <h1>Where to go next</h1>
+  <div class="two-up">
+    <div>
+      <h2>The standard</h2>
+      <p>Ten chapters, 127 testable requirements, each phrased as something an auditor can go and
+      check, with auditor-evidence guidance per section. Appendices cover the glossary, a
+      nine-mechanism proof inventory, a 32-threat model with honest coverage grades, and every
+      open working-group question.</p>
+      <p><a href="https://github.com/Task-force-for-AI-agents-in-Healthcare/ov-poc-standard">github.com/Task-force-for-AI-agents-in-Healthcare/ov-poc-standard</a></p>
+
+      <h2>The audit checklist</h2>
+      <p>All 127 requirements as tickable lists, plus CSV and JSON exports for GRC tooling.
+      Generated from the normative text, so it cannot drift from it.</p>
+
+      <h2>The reference implementation</h2>
+      <p>A working evidence pipeline: interception, path-aware policy, hash chain and Merkle tree,
+      capability-bound dispatch, anchoring, gossip, and independent verification — with an
+      eleven-scenario attack harness and the benchmarks quoted in this guide. Including the
+      deployment script that runs it on real Intel TDX hardware.</p>
+
+      <h2>The evidence schema</h2>
+      <p>CDDL for the CWT/CBOR rendering, JSON Schema for JWT, the canonicalization rules, and
+      sixteen signed test vectors — ten of them negative. What you need to build a second
+      implementation that interoperates with the first.</p>
+    </div>
+    <div>
+      <h2>The research paper</h2>
+      <p>The formal treatment: threat model, theorems and what they do and do not establish, the
+      framework coverage study, and the full measurements — including the attacks that were
+      defects in our own implementation.</p>
+
+      <h2>Join a working group</h2>
+      <p>The standard is a working draft and the open questions are genuinely open. The
+      identity-unlinkability question, cross-boundary continuity, and the tier definitions are all
+      live, and practitioner input is what the working groups are short of — particularly from
+      people running agents in regulated environments.</p>
+      <p><a href="https://advancedaisociety.org/">advancedaisociety.org</a></p>
+
+      <div class="box box--ink" style="margin-top:22px">
+        <div class="box-title">Contributing</div>
+        <p>The most useful contribution is not agreement. It is a requirement you tried to audit
+        and could not, a claim you tested and found overstated, or a deployment where the
+        architecture does not fit.</p>
+        <p>Three of this standard's requirements exist because building the implementation proved
+        the specification wrong. That is the contribution we want most.</p>
+      </div>
+
+      <hr class="rule">
+      <p style="font-size:9.5px;color:#6b665f">Proof-of-Control is stewarded by the Advanced AI
+      Society. This guide reflects the working draft of the standard at v0.1 and is offered as a
+      framework for your own evaluation — not as legal, compliance, or security assurance for any
+      particular environment.</p>
+    </div>
+  </div>
+  <div class="folio">32</div>
+</section>
+
+</body>
+</html>
