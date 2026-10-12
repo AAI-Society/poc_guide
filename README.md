@@ -81,6 +81,10 @@ confidential VM with a non-confidential control, measures both, and deletes them
 
 If you update a number here, update it there first.
 
+## Licence
+
+Apache-2.0, code and guide alike. See [LICENSE](LICENSE).
+
 ---
 
 *Proof-of-Control is stewarded by the [Advanced AI Society](https://advancedaisociety.org/) —
